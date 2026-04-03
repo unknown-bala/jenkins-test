@@ -3,7 +3,7 @@ const app = express();
 
 // Your routes — no prefix needed, Nginx strips it
 app.get('/', (req, res) => {
-    res.send('Hello from jenkins-build! Hello the is written for testing the polling. 😒');
+    res.send('The is awesome now it is working correctly ❤️❤️❤️❤️❤️❤️');
 });
 
 app.get('/api/users', (req, res) => {
