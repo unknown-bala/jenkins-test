@@ -7,10 +7,11 @@ pipeline {
 
     stages {
 
-        stage('Build (Docker)') {
+        stage('Build') {
             agent {
                 docker {
                     image 'node:18'
+                    reuseNode true
                 }
             }
             steps {
@@ -21,27 +22,35 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh '''
-                rm -rf $APP_DIR/*
-                cp -r * $APP_DIR/
+                    mkdir -p $APP_DIR
+                    rsync -av --delete \
+                        --exclude='.git' \
+                        --exclude='.env' \
+                        ./ $APP_DIR/
                 '''
             }
         }
 
-        stage('Run App (Docker Container)') {
-        steps {
-            sh '''
-            docker stop nodeapp || true
-            docker rm nodeapp || true
+        stage('Run App') {
+            steps {
+                sh '''
+                    docker stop nodeapp || true
+                    docker rm nodeapp || true
 
-            docker run -d \
-              --name nodeapp \
-              -p 3000:3000 \
-              -v /var/www/jenkins_test:/app \
-              -w /app \
-              node:18 \
-              sh -c "npm install && node app.js"
-            '''
+                    docker run -d \
+                        --name nodeapp \
+                        -p 3000:3000 \
+                        -v /var/www/jenkins_test:/app \
+                        -w /app \
+                        node:18 \
+                        sh -c "node app.js"
+                '''
             }
         }
+    }
+
+    post {
+        success { echo '✅ Deployed successfully!' }
+        failure { echo '❌ Build failed!' }
     }
 }
