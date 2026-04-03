@@ -20,16 +20,16 @@ pipeline {
         }
 
         stage('Deploy') {
-            steps {
-                sh '''
-                    mkdir -p $APP_DIR
-                    rsync -av --delete \
-                        --exclude='.git' \
-                        --exclude='.env' \
-                        ./ $APP_DIR/
-                '''
-            }
-        }
+    steps {
+        sh '''
+            mkdir -p $APP_DIR
+
+            # Copy everything except .git and .env
+            cp -rf . $APP_DIR/
+            rm -rf $APP_DIR/.git
+        '''
+    }
+}
 
         stage('Run App') {
             steps {
