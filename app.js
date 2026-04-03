@@ -1,8 +1,22 @@
 const express = require('express');
 const app = express();
 
-app.get('/', (req, res) => {
-    res.send('Jenkins deployed backend working 🚀');
+const BASE_PATH = process.env.BASE_PATH || '/jenkins-build';
+
+// Mount all your routes under the base path
+app.use(BASE_PATH, (req, res, next) => {
+    next();
 });
 
-app.listen(3000, () => console.log('Running on port 3000'));
+// Your routes
+app.get(`${BASE_PATH}/`, (req, res) => {
+    res.send('Hello from jenkins-build!');
+});
+
+app.get(`${BASE_PATH}/api/users`, (req, res) => {
+    res.json({ users: [] });
+});
+
+app.listen(3000, () => {
+    console.log(`App running on port 3000 under ${BASE_PATH}`);
+});
