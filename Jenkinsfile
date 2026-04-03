@@ -1,28 +1,42 @@
 pipeline {
     agent any
 
+    environment {
+        APP_DIR = "/var/www/jenkins_test"
+    }
+
     stages {
-        stage('Clone') {
-            steps {
-                echo 'Cloning done automatically'
-            }
-        }
 
-        stage('Build') {
-            steps {
-                sh 'echo Building project...'
+        stage('Build (Docker)') {
+            agent {
+                docker {
+                    image 'node:18'
+                }
             }
-        }
-
-        stage('Test') {
             steps {
-                sh 'echo Running tests...'
+                sh 'node -v'
+                sh 'npm install'
             }
         }
 
         stage('Deploy') {
             steps {
-                sh 'echo Deploying app...'
+                sh '''
+                rm -rf $APP_DIR/*
+                cp -r * $APP_DIR/
+                '''
+            }
+        }
+
+        stage('Run App') {
+            steps {
+                sh '''
+                cd $APP_DIR
+
+                pm2 stop nodeapp || true
+                npm install -g pm2
+                pm2 start app.js --name nodeapp
+                '''
             }
         }
     }
