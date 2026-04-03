@@ -27,21 +27,20 @@ pipeline {
             }
         }
 
-        stage('Run App (Docker)') {
-            agent {
-                docker {
-                    image 'node:18'
-                }
-            }
-            steps {
-                sh '''
-                cd $APP_DIR
+        stage('Run App (Docker Container)') {
+        steps {
+            sh '''
+            docker stop nodeapp || true
+            docker rm nodeapp || true
 
-                npm install -g pm2
-
-                pm2 stop nodeapp || true
-                pm2 start app.js --name nodeapp
-                '''
+            docker run -d \
+              --name nodeapp \
+              -p 3000:3000 \
+              -v /var/www/jenkins_test:/app \
+              -w /app \
+              node:18 \
+              sh -c "npm install && node app.js"
+            '''
             }
         }
     }
