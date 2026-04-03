@@ -20,16 +20,18 @@ pipeline {
         }
 
         stage('Deploy') {
-    steps {
-        sh '''
-            mkdir -p $APP_DIR
+            steps {
+                sh '''
+                    mkdir -p $APP_DIR
 
-            # Copy everything except .git and .env
-            cp -rf . $APP_DIR/
-            rm -rf $APP_DIR/.git
-        '''
-    }
-}
+                    rsync -av --delete \
+                        --exclude='.git' \
+                        --exclude='.env' \
+                        --exclude='*.log' \
+                        ./ $APP_DIR/
+                '''
+            }
+        }
 
         stage('Run App') {
             steps {
@@ -39,6 +41,7 @@ pipeline {
 
                     docker run -d \
                         --name nodeapp \
+                        --restart unless-stopped \
                         -p 3000:3000 \
                         -v /var/www/jenkins_test:/app \
                         -w /app \
@@ -50,7 +53,11 @@ pipeline {
     }
 
     post {
-        success { echo '✅ Deployed successfully!' }
-        failure { echo '❌ Build failed!' }
+        success {
+            echo '✅ Deployed successfully!'
+        }
+        failure {
+            echo '❌ Build failed!'
+        }
     }
 }
